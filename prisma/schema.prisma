@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Person {
+  id        Int    @unique @id @default(autoincrement())
+  nik   String
+  created_at String
+  updated_at String
+  nama  String
+  jenis_kelamin String?
+  alamat String?
+  tempat_lahir String?
+  tanggal_lahir String?
+  umur Int?
+  gol_darah String?
+  rt String?
+  rw String?
+  kelurahan String?
+  kecamatan String?
+  agama String?
+  status String?
+  pekerjaan String?
+  kewarganegaraan String?
+  url_image_ktp String
+  url_image_selfie String
+  path_image_ktp String
+  path_image_selfie String
+  user User @relation(fields: [owner], references: [id])
+  owner Int
+  reports Report[]
+}
+
+model Report {
+  id        Int    @unique @id @default(autoincrement())
+  created_at String
+  finished_at String
+  kendala_proses String?
+  status String?
+  pdf String?
+  skor String
+  skor_fr Float
+  skor_ocr Float
+  skor_asid Float
+  person    Person    @relation(fields: [id_person], references: [id])
+  request Request? @relation (fields: [id_permintaan], references: [id])
+  user User @relation(fields: [owner], references: [id])
+  id_person     Int  
+  id_permintaan String?
+  owner Int
+}
+
+model Request {
+  id        String    @unique @id 
+  jenis_permintaan     String
+  jumlah_customer Int  
+  created_at String
+  finished_at String
+  reports Report[]
+  user User @relation(fields: [owner], references: [id])
+  owner Int
+}
+
+model User {
+  id        Int    @unique @id @default(autoincrement())
+  username String
+  nik String? @unique
+  email   String @unique
+  password String
+  role String
+  img_profile String?
+  persons Person[]
+  requests Request[]
+  reports Report[]
+  ktpPhoto    String?
+  selfiePhoto String?
+}
+
+model Authentication {
+  id        Int    @unique @id @default(autoincrement())
+  user_agent String
+  ip_address String
+  token String @unique
+}
