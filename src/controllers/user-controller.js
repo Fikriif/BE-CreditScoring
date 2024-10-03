@@ -24,9 +24,18 @@ router.post("/", async (req, res) => {
     const userId = req.userId;
     await verifyAdmin(userId);
 
+    // Validasi payload
     UsersValidator.validateUserPayload(req.body);
 
-    const { nik, username, email, password, role } = req.body;
+    const {
+      nik,
+      username,
+      email,
+      password,
+      confirmPassword, // untuk validasi
+      role,
+      jenis_kelamin,
+    } = req.body;
     const { ktp_photo, selfie_photo } = req.files;
 
     // Validasi file upload manual
@@ -37,6 +46,7 @@ router.post("/", async (req, res) => {
       });
     }
 
+    // Validasi file upload manual
     if (!selfie_photo) {
       return res.status(400).send({
         error: true,
@@ -44,37 +54,50 @@ router.post("/", async (req, res) => {
       });
     }
 
-    if (!nik || !username || !email || !password || !role) {
+    // Validasi field tidak boleh kosong
+    if (!nik || !username || !email || !password || !role || !jenis_kelamin) {
       return res.status(400).send({
         error: "true",
-        message: "nik, username, email, password, atau role belum diisi",
+        message:
+          "nik, username, email, password, jenis kelamin atau role belum diisi",
       });
     }
 
-    // if (password !== confirmPassword) {
-    //   return res.status(400).send({
-    //     error: true,
-    //     message: "Password dan konfirmasi password tidak cocok",
-    //   });
-    // }
+    // cocokan password dengan condirmPassword
+    if (password !== confirmPassword) {
+      res.status(400).send({
+        error: true,
+        message: "Password dan konfirmasi password tidak cocok",
+      });
+    }
+
+    // Hapus confirmPassword dari objek yang akan disimpan ke database
+    delete req.body.confirmPassword;
+
+    // Lanjutkan ke proses pembuatan user
     await checkEmail(email);
     await createUser(
       nik,
       username,
       email,
       password,
+      jenis_kelamin,
       role,
       ktp_photo,
       selfie_photo
     );
+
     // console.log(object);
+    // Berikan respon berhasil ke front-end
     return res.status(201).send({
       error: false,
       message: "Akun berhasil dibuat",
       result: {
         nik,
         username,
+        jenis_kelamin,
         email,
+        password,
         role,
       },
     });

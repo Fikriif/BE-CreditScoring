@@ -5,7 +5,8 @@ const insertUser = async (
   nik,
   username,
   email,
-  hashedPassword,
+  hashedPassword, // Ini adalah hashed password
+  jenis_kelamin, // Tidak di-hash
   role,
   ktpPhotoPath,
   selfiePhotoPath
@@ -15,10 +16,11 @@ const insertUser = async (
       nik: nik,
       username: username,
       email: email,
-      password: hashedPassword, // Simpan hashed password
+      password: hashedPassword, // Password yang sudah di-hash
+      jenis_kelamin: jenis_kelamin, // Tidak di-hash
       role: role,
-      ktpPhoto: ktpPhotoPath, // Path foto KTP
-      selfiePhoto: selfiePhotoPath, // Path foto selfie
+      ktpPhoto: ktpPhotoPath,
+      selfiePhoto: selfiePhotoPath,
     },
   });
 
@@ -35,7 +37,7 @@ const findUserById = async (id) => {
       username: true,
       email: true,
       role: true,
-      img_profile: true,
+      jenis_kelamin: true,
     },
   });
   return user;

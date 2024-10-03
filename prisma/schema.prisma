@@ -79,7 +79,7 @@ model User {
   email   String @unique
   password String
   role String
-  img_profile String?
+  jenis_kelamin String?
   persons Person[]
   requests Request[]
   reports Report[]
