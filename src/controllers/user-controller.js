@@ -74,6 +74,9 @@ router.post("/", async (req, res) => {
     // Hapus confirmPassword dari objek yang akan disimpan ke database
     delete req.body.confirmPassword;
 
+    // console.log(ktp_photo);
+    const protocol = req.protocol;
+    const host = req.get("host");
     // Lanjutkan ke proses pembuatan user
     await checkEmail(email);
     await createUser(
@@ -84,7 +87,9 @@ router.post("/", async (req, res) => {
       jenis_kelamin,
       role,
       ktp_photo,
-      selfie_photo
+      selfie_photo,
+      protocol,
+      host
     );
 
     // console.log(object);

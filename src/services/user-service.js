@@ -23,7 +23,9 @@ const createUser = async (
   jenis_kelamin,
   role,
   ktp_photo,
-  selfie_photo
+  selfie_photo,
+  protocol,
+  host
 ) => {
   // Hash hanya untuk password
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -40,7 +42,31 @@ const createUser = async (
     "./src/public/images/selfie"
   );
 
+  // Upload foto ke direktori yang diinginkan
+  // await uploadImage(ktp_photo, ktpImageName, `${protocol}://${req.get("host")}/src/public/images/ktp`);
+  // await uploadImage(
+  //   ktp_photo,
+  //   ktpImageName,
+  //   `${protocol}://${host}/images/ktp`
+  // );
+  // await uploadImage(
+  //   selfie_photo,
+  //   selfieImageName,
+  //   "./src/public/images/selfie"
+  // );
+
   // Simpan pengguna ke database, termasuk path foto, tapi tidak meng-hash jenis_kelamin
+  // const newUser = await insertUser(
+  //   nik,
+  //   username,
+  //   email,
+  //   hashedPassword, // Hanya password yang di-hash
+  //   jenis_kelamin, // Tidak di-hash
+  //   role,
+  //   `./src/public/images/ktp/${ktpImageName}`, // Path foto KTP
+  //   `./src/public/images/selfie/${selfieImageName}` // Path foto selfie
+  // );
+
   const newUser = await insertUser(
     nik,
     username,
@@ -48,8 +74,8 @@ const createUser = async (
     hashedPassword, // Hanya password yang di-hash
     jenis_kelamin, // Tidak di-hash
     role,
-    `./src/public/images/ktp/${ktpImageName}`, // Path foto KTP
-    `./src/public/images/selfie/${selfieImageName}` // Path foto selfie
+    `${protocol}://${host}/images/ktp/${ktpImageName}`, // Path foto KTP
+    `${protocol}://${host}/images/selfie/${selfieImageName}` // Path foto selfie
   );
 
   return newUser;
@@ -57,7 +83,7 @@ const createUser = async (
 
 const verifyAdmin = async (userId) => {
   const user = await getUserProfileById(userId);
-  if (user.role !== "admin") {
+  if (user.role !== "superadmin") {
     throw new AuthorizationError("Anda tidak berhak mengakses resource ini");
   }
 };

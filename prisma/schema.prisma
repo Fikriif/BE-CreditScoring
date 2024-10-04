@@ -72,14 +72,25 @@ model Request {
   owner Int
 }
 
+enum Role {
+  superadmin
+  admin
+  user
+}
+
+enum JenisKelamin {
+  male
+  female
+}
+
 model User {
   id        Int    @unique @id @default(autoincrement())
   username String
   nik String? @unique
   email   String @unique
   password String
-  role String
-  jenis_kelamin String?
+  role Role
+  jenis_kelamin JenisKelamin?
   persons Person[]
   requests Request[]
   reports Report[]

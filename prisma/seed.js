@@ -5,24 +5,26 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Encrypt the password
-  const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+  const hashedPassword = await bcrypt.hash("superadmin", 10); // Menggunakan password 'admin' langsung
 
   // Insert or update the user with the new role
   await prisma.user.upsert({
-    where: { email: "admin@gmail.com" },
+    where: { email: "superadmin@gmail.com" }, // Menggunakan email superadmin
     update: {
       password: hashedPassword,
-      role: "admin", // Update the role
+      role: "superadmin", // Update the role ke superadmin
     },
     create: {
       username: "Super Admin",
-      email: "admin@gmail.com",
+      email: "superadmin@gmail.com", // Menggunakan email superadmin
       password: hashedPassword,
-      role: "admin", // Set the role for the new user
+      role: "superadmin", // Set the role untuk user baru
     },
   });
 
-  console.log("User created or updated with email admin and role admin");
+  console.log(
+    "User created or updated with email superadmin@gmail.com and role superadmin"
+  );
 }
 
 main()
