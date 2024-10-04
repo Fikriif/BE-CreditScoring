@@ -103,30 +103,59 @@ const getUserProfileById = async (userId) => {
   return user;
 };
 
-const updateUserProfileByIdWithImage = async (
+const updateUserByIdWithImage = async (
   req,
   userId,
-  { username, email, role, nik, imageName }
+  { username, email, role, nik, ktp_photo, selfie_photo }
 ) => {
-  const urlImage = `${req.protocol}://${req.get(
+  const ktpImage = `${req.protocol}://${req.get(
     "host"
-  )}/images/profile/${imageName}`;
+  )}/images/ktp/${ktp_photo}`;
+
+  const selfieImage = `${req.protocol}://${req.get(
+    "host"
+  )}/images/selfie/${selfie_photo}`;
+
+  console.log("ktp: ", ktpImage);
+  console.log("selfie: ", selfieImage);
+
   await getUserProfileById(userId);
   await editUserProfileByIdWithImage(userId, {
     username,
     email,
     role,
     nik,
-    urlImage,
+    ktp_photo: ktpImage,
+    selfie_photo: selfieImage,
   });
 };
 
-const updateUserProfileByIdWithoutImage = async (
+const updateUserByIdWithoutImage = async (
   userId,
-  { username, email, role, nik }
+  { username, email, role, nik, password }
 ) => {
+  // const passwordHash = await bcrypt.hash(password, 10);
+  // console.log(passwordHash);
+
+  let passwordHash = null;
+
+  // Hanya hash password jika diberikan
+  if (password) {
+    passwordHash = await bcrypt.hash(password, 10);
+  }
+
+  // console.log(passwordHash);
+  console.log("Password sebelum hashing: ", password);
+  console.log("Password setelah hashing: ", passwordHash);
+
   await getUserProfileById(userId);
-  await editUserProfileByIdWithoutImage(userId, { username, email, role, nik });
+  await editUserProfileByIdWithoutImage(userId, {
+    username,
+    email,
+    role,
+    nik,
+    password: passwordHash,
+  });
 };
 
 const updateUserAccountById = async (userId, data) => {
@@ -168,8 +197,8 @@ module.exports = {
   verifyAdmin,
   checkEmail,
   getUserProfileById,
-  updateUserProfileByIdWithImage,
-  updateUserProfileByIdWithoutImage,
+  updateUserByIdWithImage,
+  updateUserByIdWithoutImage,
   updateUserAccountById,
   getAllUser,
   verifySuperAdmin,

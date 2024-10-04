@@ -5,11 +5,11 @@ const {
   checkEmail,
   createUser,
   getUserProfileById,
-  updateUserProfileByIdWithImage,
-  updateUserProfileByIdWithoutImage,
   getAllUser,
   getCountUser,
   deleteUserByIdService,
+  updateUserByIdWithImage,
+  updateUserByIdWithoutImage,
 } = require("../services/user-service");
 
 const ClientError = require("../exceptions/ClientError");
@@ -168,7 +168,7 @@ router.get("/", async (req, res) => {
 router.patch("/:id", async (req, res) => {
   const { id } = req.params;
   const userId = parseInt(id);
-  const { username, email, role, nik } = req.body;
+  const { username, email, role, nik, password } = req.body;
 
   if (req.files) {
     try {
@@ -184,7 +184,15 @@ router.patch("/:id", async (req, res) => {
         "./src/public/images/selfie"
       );
 
-      await updateUserProfileByIdWithImage(req, userId, {
+      // await updateUserProfileByIdWithImage(req, userId, {
+      //   username,
+      //   email,
+      //   role,
+      //   nik,
+      //   ktp_photo: ktpImageName,
+      //   selfie_photo: selfieImageName,
+      // });
+      await updateUserByIdWithImage(req, userId, {
         username,
         email,
         role,
@@ -216,11 +224,12 @@ router.patch("/:id", async (req, res) => {
 
   // Jika tidak ada gambar yang diupload, update field yang ada
   try {
-    await updateUserProfileByIdWithoutImage(userId, {
+    await updateUserByIdWithoutImage(userId, {
       username,
       email,
       role,
       nik,
+      password,
     });
 
     return res.status(200).send({

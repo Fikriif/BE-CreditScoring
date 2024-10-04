@@ -52,32 +52,7 @@ const findUserByEmail = async (email) => {
   return user;
 };
 
-// const editUserProfileByIdWithImage = async (userId, { username, urlImage }) => {
-//   await prisma.user.update({
-//     where: {
-//       id: userId,
-//     },
-//     data: {
-//       username: username,
-//       img_profile: urlImage,
-//     },
-//   });
-// };
-
-// const editUserProfileByIdWithoutImage = async (userId, { username }) => {
-//   await prisma.user.update({
-//     where: {
-//       id: userId,
-//     },
-//     data: {
-//       username: username,
-//     },
-//   });
-// };
-
-// Jika ada gambar yang diupdate
-
-const editUserProfileByIdWithImage = async (req, userId, data) => {
+const editUserProfileByIdWithImage = async (userId, data) => {
   const existingUserWithEmail = await prisma.user.findFirst({
     where: {
       email: data.email,
@@ -112,8 +87,8 @@ const editUserProfileByIdWithImage = async (req, userId, data) => {
       email: data.email,
       role: data.role,
       nik: data.nik, // Update NIK di sini
-      ktp_photo: data.ktp_photo, // Update KTP photo
-      selfie_photo: data.selfie_photo, // Update selfie photo
+      ktpPhoto: data.ktp_photo, // Update KTP photo
+      selfiePhoto: data.selfie_photo, // Update selfie photo
     },
   });
 };
@@ -147,15 +122,23 @@ const editUserProfileByIdWithoutImage = async (userId, data) => {
     throw new ClientError("NIK sudah digunakan oleh user lain.");
   }
 
+  // Update hanya field yang ada
+  const updateData = {
+    username: data.username,
+    email: data.email,
+    role: data.role,
+    nik: data.nik, // Update NIK di sini juga
+  };
+
+  // Jika password disediakan, tambahkan ke data yang akan di-update
+  if (data.password) {
+    updateData.password = data.password; // password yang sudah di-hash
+  }
+
   try {
     return prisma.user.update({
       where: { id: parseInt(userId) },
-      data: {
-        username: data.username,
-        email: data.email,
-        role: data.role,
-        nik: data.nik, // Update NIK di sini juga
-      },
+      data: updateData, // Kirim data yang sudah disaring
     });
   } catch (error) {
     if (error.code === "P2002") {
@@ -168,6 +151,29 @@ const editUserProfileByIdWithoutImage = async (userId, data) => {
     }
     throw error; // Lemparkan error lain ke controller
   }
+
+  // try {
+  //   return prisma.user.update({
+  //     where: { id: parseInt(userId) },
+  //     data: {
+  //       username: data.username,
+  //       email: data.email,
+  //       role: data.role,
+  //       nik: data.nik, // Update NIK di sini juga
+  //       password: data.password,
+  //     },
+  //   });
+  // } catch (error) {
+  //   if (error.code === "P2002") {
+  //     // Prisma error code for unique constraint violation
+  //     if (error.meta && error.meta.target.includes("email")) {
+  //       throw new ClientError("Email sudah digunakan oleh user lain.", 400); // Lempar error
+  //     } else if (error.meta && error.meta.target.includes("nik")) {
+  //       throw new ClientError("NIK sudah digunakan oleh user lain.", 400); // Lempar error
+  //     }
+  //   }
+  //   throw error; // Lemparkan error lain ke controller
+  // }
 };
 
 const editUserAccountById = async (userId, data) => {
