@@ -96,6 +96,8 @@ model User {
   reports Report[]
   ktpPhoto    String?
   selfiePhoto String?
+  created_at String?
+  finished_at String?
 }
 
 model Authentication {

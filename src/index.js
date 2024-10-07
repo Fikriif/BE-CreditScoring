@@ -18,6 +18,11 @@ const port = 80;
 
 dotenv.config();
 app.use(cors());
+// app.use(cors({
+//   origin: 'http://localhost:3000', // Pastikan sesuai dengan URL frontend Next.js
+//   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Sesuaikan metode HTTP yang diizinkan
+//   allowedHeaders: ['Content-Type', 'Authorization'] // Izinkan header yang digunakan
+// }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(FileUpload());

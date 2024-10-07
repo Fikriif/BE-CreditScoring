@@ -151,29 +151,6 @@ const editUserProfileByIdWithoutImage = async (userId, data) => {
     }
     throw error; // Lemparkan error lain ke controller
   }
-
-  // try {
-  //   return prisma.user.update({
-  //     where: { id: parseInt(userId) },
-  //     data: {
-  //       username: data.username,
-  //       email: data.email,
-  //       role: data.role,
-  //       nik: data.nik, // Update NIK di sini juga
-  //       password: data.password,
-  //     },
-  //   });
-  // } catch (error) {
-  //   if (error.code === "P2002") {
-  //     // Prisma error code for unique constraint violation
-  //     if (error.meta && error.meta.target.includes("email")) {
-  //       throw new ClientError("Email sudah digunakan oleh user lain.", 400); // Lempar error
-  //     } else if (error.meta && error.meta.target.includes("nik")) {
-  //       throw new ClientError("NIK sudah digunakan oleh user lain.", 400); // Lempar error
-  //     }
-  //   }
-  //   throw error; // Lemparkan error lain ke controller
-  // }
 };
 
 const editUserAccountById = async (userId, data) => {
@@ -197,7 +174,7 @@ const findAllUser = async (size, skip) => {
       email: true,
       password: true,
       role: true,
-      img_profile: true,
+      jenis_kelamin: true,
       nik: true,
       ktpPhoto: true,
       selfiePhoto: true,
