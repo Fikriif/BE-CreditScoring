@@ -66,7 +66,6 @@ const editUserProfileByIdWithImage = async (userId, data) => {
     throw new ClientError("Email sudah digunakan oleh user lain.");
   }
 
-  // Cek apakah NIK sudah digunakan oleh user lain
   const existingUserWithNik = await prisma.user.findFirst({
     where: {
       nik: data.nik,
@@ -80,17 +79,48 @@ const editUserProfileByIdWithImage = async (userId, data) => {
     throw new ClientError("NIK sudah digunakan oleh user lain.");
   }
 
-  return prisma.user.update({
-    where: { id: userId },
-    data: {
-      username: data.username,
-      email: data.email,
-      role: data.role,
-      nik: data.nik, // Update NIK di sini
-      ktpPhoto: data.ktp_photo, // Update KTP photo
-      selfiePhoto: data.selfie_photo, // Update selfie photo
-    },
-  });
+  // return prisma.user.update({
+  //   where: { id: userId },
+  //   data: {
+  //     username: data.username,
+  //     email: data.email,
+  //     role: data.role,
+  //     nik: data.nik,
+  //     jenis_kelamin: data.jenis_kelamin,
+  //     ktpPhoto: data.ktp_photo,
+  //     selfiePhoto: data.selfie_photo,
+  //   },
+  // });
+  // Update hanya field yang ada
+  const updateData = {
+    username: data.username,
+    email: data.email,
+    role: data.role,
+    nik: data.nik,
+    jenis_kelamin: data.jenis_kelamin,
+  };
+
+  // Jika password disediakan, tambahkan ke data yang akan di-update
+  if (data.password) {
+    updateData.password = data.password; // password yang sudah di-hash
+  }
+
+  try {
+    return prisma.user.update({
+      where: { id: parseInt(userId) },
+      data: updateData, // Kirim data yang sudah disaring
+    });
+  } catch (error) {
+    if (error.code === "P2002") {
+      // Prisma error code for unique constraint violation
+      if (error.meta && error.meta.target.includes("email")) {
+        throw new ClientError("Email sudah digunakan oleh user lain.", 400); // Lempar error
+      } else if (error.meta && error.meta.target.includes("nik")) {
+        throw new ClientError("NIK sudah digunakan oleh user lain.", 400); // Lempar error
+      }
+    }
+    throw error; // Lemparkan error lain ke controller
+  }
 };
 
 // Jika tidak ada gambar yang diupdate
@@ -127,7 +157,8 @@ const editUserProfileByIdWithoutImage = async (userId, data) => {
     username: data.username,
     email: data.email,
     role: data.role,
-    nik: data.nik, // Update NIK di sini juga
+    nik: data.nik,
+    jenis_kelamin: data.jenis_kelamin,
   };
 
   // Jika password disediakan, tambahkan ke data yang akan di-update
@@ -178,6 +209,7 @@ const findAllUser = async (size, skip) => {
       nik: true,
       ktpPhoto: true,
       selfiePhoto: true,
+      created_at: true,
     },
   });
   return users;

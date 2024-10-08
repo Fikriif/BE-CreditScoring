@@ -97,14 +97,6 @@ router.post("/", async (req, res) => {
     return res.status(201).send({
       error: false,
       message: "Akun berhasil dibuat",
-      result: {
-        nik,
-        username,
-        jenis_kelamin,
-        email,
-        password,
-        role,
-      },
     });
   } catch (error) {
     if (error instanceof ClientError) {
@@ -168,7 +160,39 @@ router.get("/", async (req, res) => {
 router.patch("/:id", async (req, res) => {
   const { id } = req.params;
   const userId = parseInt(id);
-  const { username, email, role, nik, password } = req.body;
+  const {
+    username,
+    email,
+    role,
+    nik,
+    password,
+    confirmPassword,
+    jenis_kelamin,
+  } = req.body;
+
+  if (
+    !nik ||
+    !username ||
+    !email ||
+    !password ||
+    !confirmPassword ||
+    !role ||
+    !jenis_kelamin
+  ) {
+    return res.status(400).send({
+      error: "true",
+      message:
+        "nik, username, email, password, confirmPassword, jenis kelamin atau role belum diisi",
+    });
+  }
+
+  // cocokan password dengan condirmPassword
+  if (password !== confirmPassword) {
+    res.status(400).send({
+      error: true,
+      message: "Password dan konfirmasi password tidak cocok",
+    });
+  }
 
   if (req.files) {
     try {
@@ -184,19 +208,13 @@ router.patch("/:id", async (req, res) => {
         "./src/public/images/selfie"
       );
 
-      // await updateUserProfileByIdWithImage(req, userId, {
-      //   username,
-      //   email,
-      //   role,
-      //   nik,
-      //   ktp_photo: ktpImageName,
-      //   selfie_photo: selfieImageName,
-      // });
       await updateUserByIdWithImage(req, userId, {
         username,
         email,
         role,
         nik,
+        jenis_kelamin,
+        password,
         ktp_photo: ktpImageName,
         selfie_photo: selfieImageName,
       });
@@ -229,6 +247,7 @@ router.patch("/:id", async (req, res) => {
       email,
       role,
       nik,
+      jenis_kelamin,
       password,
     });
 
