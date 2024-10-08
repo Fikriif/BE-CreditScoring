@@ -66,7 +66,6 @@ const editUserProfileByIdWithImage = async (userId, data) => {
     throw new ClientError("Email sudah digunakan oleh user lain.");
   }
 
-  // Cek apakah NIK sudah digunakan oleh user lain
   const existingUserWithNik = await prisma.user.findFirst({
     where: {
       nik: data.nik,
@@ -181,6 +180,7 @@ const findAllUser = async (size, skip) => {
       nik: true,
       ktpPhoto: true,
       selfiePhoto: true,
+      created_at: true,
     },
   });
   return users;

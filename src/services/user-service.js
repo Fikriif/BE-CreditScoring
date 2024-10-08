@@ -42,31 +42,6 @@ const createUser = async (
     "./src/public/images/selfie"
   );
 
-  // Upload foto ke direktori yang diinginkan
-  // await uploadImage(ktp_photo, ktpImageName, `${protocol}://${req.get("host")}/src/public/images/ktp`);
-  // await uploadImage(
-  //   ktp_photo,
-  //   ktpImageName,
-  //   `${protocol}://${host}/images/ktp`
-  // );
-  // await uploadImage(
-  //   selfie_photo,
-  //   selfieImageName,
-  //   "./src/public/images/selfie"
-  // );
-
-  // Simpan pengguna ke database, termasuk path foto, tapi tidak meng-hash jenis_kelamin
-  // const newUser = await insertUser(
-  //   nik,
-  //   username,
-  //   email,
-  //   hashedPassword, // Hanya password yang di-hash
-  //   jenis_kelamin, // Tidak di-hash
-  //   role,
-  //   `./src/public/images/ktp/${ktpImageName}`, // Path foto KTP
-  //   `./src/public/images/selfie/${selfieImageName}` // Path foto selfie
-  // );
-
   const newUser = await insertUser(
     nik,
     username,
@@ -131,8 +106,10 @@ const updateUserByIdWithImage = async (
     passwordHash = await bcrypt.hash(password, 10);
   }
 
-  console.log("ktp: ", ktpImage);
-  console.log("selfie: ", selfieImage);
+  // console.log("ktp: ", ktpImage);
+  // console.log("selfie: ", selfieImage);
+  console.log("Password sebelum hashing: ", password);
+  console.log("Password setelah hashing: ", passwordHash);
 
   await getUserProfileById(userId);
   await editUserProfileByIdWithImage(userId, {
@@ -151,9 +128,6 @@ const updateUserByIdWithoutImage = async (
   userId,
   { username, email, role, nik, jenis_kelamin, password }
 ) => {
-  // const passwordHash = await bcrypt.hash(password, 10);
-  // console.log(passwordHash);
-
   let passwordHash = null;
 
   // Hanya hash password jika diberikan
@@ -161,7 +135,6 @@ const updateUserByIdWithoutImage = async (
     passwordHash = await bcrypt.hash(password, 10);
   }
 
-  // console.log(passwordHash);
   console.log("Password sebelum hashing: ", password);
   console.log("Password setelah hashing: ", passwordHash);
 

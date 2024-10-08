@@ -97,14 +97,6 @@ router.post("/", async (req, res) => {
     return res.status(201).send({
       error: false,
       message: "Akun berhasil dibuat",
-      result: {
-        nik,
-        username,
-        jenis_kelamin,
-        email,
-        password,
-        role,
-      },
     });
   } catch (error) {
     if (error instanceof ClientError) {
@@ -207,14 +199,6 @@ router.patch("/:id", async (req, res) => {
         "./src/public/images/selfie"
       );
 
-      // await updateUserProfileByIdWithImage(req, userId, {
-      //   username,
-      //   email,
-      //   role,
-      //   nik,
-      //   ktp_photo: ktpImageName,
-      //   selfie_photo: selfieImageName,
-      // });
       await updateUserByIdWithImage(req, userId, {
         username,
         email,
@@ -223,6 +207,8 @@ router.patch("/:id", async (req, res) => {
         jenis_kelamin,
         password,
         confirmPassword,
+        jenis_kelamin,
+        password,
         ktp_photo: ktpImageName,
         selfie_photo: selfieImageName,
       });
@@ -255,6 +241,7 @@ router.patch("/:id", async (req, res) => {
       email,
       role,
       nik,
+      jenis_kelamin,
       jenis_kelamin,
       password,
       confirmPassword,
