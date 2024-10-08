@@ -64,10 +64,10 @@ const renewAccessToken = async (refreshToken) => {
       { userId, userEmail },
       process.env.ACCESS_TOKEN_SECRET,
       {
-        expiresIn: "30s",
+        expiresIn: "1d",
       }
     );
-    return { accessToken, expiresIn: 30 };
+    return { accessToken, expiresIn: "1d" };
   } catch (error) {
     console.error(error);
     throw new AuthorizationError("Anda tidak berhak mengakses resource ini");

@@ -87,6 +87,8 @@ const editUserProfileByIdWithImage = async (userId, data) => {
       email: data.email,
       role: data.role,
       nik: data.nik, // Update NIK di sini
+      jenis_kelamin: data.jenis_kelamin,
+      password: data.password, // Update password
       ktpPhoto: data.ktp_photo, // Update KTP photo
       selfiePhoto: data.selfie_photo, // Update selfie photo
     },
@@ -128,6 +130,7 @@ const editUserProfileByIdWithoutImage = async (userId, data) => {
     email: data.email,
     role: data.role,
     nik: data.nik, // Update NIK di sini juga
+    jenis_kelamin: data.jenis_kelamin,
   };
 
   // Jika password disediakan, tambahkan ke data yang akan di-update

@@ -83,7 +83,7 @@ const createUser = async (
 
 const verifyAdmin = async (userId) => {
   const user = await getUserProfileById(userId);
-  if (user.role !== "superadmin") {
+  if (user.role !== "superadmin" && user.role !== "admin") {
     throw new AuthorizationError("Anda tidak berhak mengakses resource ini");
   }
 };
@@ -106,7 +106,16 @@ const getUserProfileById = async (userId) => {
 const updateUserByIdWithImage = async (
   req,
   userId,
-  { username, email, role, nik, ktp_photo, selfie_photo }
+  {
+    username,
+    email,
+    role,
+    nik,
+    jenis_kelamin,
+    password,
+    ktp_photo,
+    selfie_photo,
+  }
 ) => {
   const ktpImage = `${req.protocol}://${req.get(
     "host"
@@ -115,6 +124,12 @@ const updateUserByIdWithImage = async (
   const selfieImage = `${req.protocol}://${req.get(
     "host"
   )}/images/selfie/${selfie_photo}`;
+
+  let passwordHash = null;
+
+  if (password) {
+    passwordHash = await bcrypt.hash(password, 10);
+  }
 
   console.log("ktp: ", ktpImage);
   console.log("selfie: ", selfieImage);
@@ -125,6 +140,8 @@ const updateUserByIdWithImage = async (
     email,
     role,
     nik,
+    jenis_kelamin,
+    password: passwordHash,
     ktp_photo: ktpImage,
     selfie_photo: selfieImage,
   });
@@ -132,7 +149,7 @@ const updateUserByIdWithImage = async (
 
 const updateUserByIdWithoutImage = async (
   userId,
-  { username, email, role, nik, password }
+  { username, email, role, nik, jenis_kelamin, password }
 ) => {
   // const passwordHash = await bcrypt.hash(password, 10);
   // console.log(passwordHash);
@@ -154,6 +171,7 @@ const updateUserByIdWithoutImage = async (
     email,
     role,
     nik,
+    jenis_kelamin,
     password: passwordHash,
   });
 };

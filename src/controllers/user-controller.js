@@ -168,7 +168,30 @@ router.get("/", async (req, res) => {
 router.patch("/:id", async (req, res) => {
   const { id } = req.params;
   const userId = parseInt(id);
-  const { username, email, role, nik, password } = req.body;
+  const {
+    username,
+    email,
+    role,
+    nik,
+    jenis_kelamin,
+    password,
+    confirmPassword,
+  } = req.body;
+
+  if (password !== confirmPassword) {
+    res.status(400).send({
+      error: true,
+      message: "Password dan konfirmasi password tidak cocok",
+    });
+  }
+
+  if (!nik || !username || !email || !password || !role || !jenis_kelamin) {
+    return res.status(400).send({
+      error: "true",
+      message:
+        "nik, username, email, password, jenis kelamin atau role belum diisi",
+    });
+  }
 
   if (req.files) {
     try {
@@ -197,6 +220,9 @@ router.patch("/:id", async (req, res) => {
         email,
         role,
         nik,
+        jenis_kelamin,
+        password,
+        confirmPassword,
         ktp_photo: ktpImageName,
         selfie_photo: selfieImageName,
       });
@@ -229,7 +255,9 @@ router.patch("/:id", async (req, res) => {
       email,
       role,
       nik,
+      jenis_kelamin,
       password,
+      confirmPassword,
     });
 
     return res.status(200).send({
@@ -243,7 +271,6 @@ router.patch("/:id", async (req, res) => {
         message: error.message, // Kirim pesan error yang spesifik
       });
     }
-
     console.error("Error during PATCH user: ", error.message);
     return res.status(500).send({
       error: true,
