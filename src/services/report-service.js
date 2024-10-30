@@ -82,12 +82,16 @@ const generateReportPDF = async (report) => {
   );
   const html = await fsExtra.readFile(filePath, "utf8");
   const content = hbs.compile(html)(data);
-  const browser = await puppeteer.launch({
-    executablePath:
-      // "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-      "usr/bin/google-chrome",
-    headless: true,
-  });
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
+const browser = await puppeteer.launch({
+  headless: true,
+  executablePath: isDevelopment
+    ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" // Di lokal
+    : undefined, // Gunakan Chromium bawaan di server
+  args: ['--no-sandbox', '--disable-setuid-sandbox'],
+});
+  
   const page = await browser.newPage();
   await page.setContent(content);
 

@@ -15,10 +15,10 @@ datasource db {
 
 model Person {
   id        Int    @unique @id @default(autoincrement())
-  nik   String
+  nik   String?
   created_at String
   updated_at String
-  nama  String
+  nama  String?
   jenis_kelamin String?
   alamat String?
   tempat_lahir String?
@@ -33,12 +33,20 @@ model Person {
   status String?
   pekerjaan String?
   kewarganegaraan String?
-  url_image_ktp String
-  url_image_selfie String
-  path_image_ktp String
-  path_image_selfie String
-  user User @relation(fields: [owner], references: [id])
-  owner Int
+  url_image_ktp String?
+  url_image_selfie String?
+  url_image_surat_npwpPribadi String?
+  url_image_surat_nib String?
+  url_image_surat_npwpPerusahaan String?
+  url_image_surat_nan String?
+  url_image_surat_kdu String?
+  url_image_surat_iup String?
+  url_image_surat_tdp String?
+  url_image_surat_id String?
+  path_image_ktp String?
+  path_image_selfie String?
+  user User? @relation(fields: [owner], references: [id])
+  owner Int?
   reports Report[]
 }
 

@@ -11,6 +11,7 @@ const routerPerson = require("./controllers/person-controller");
 const routerRequest = require("./controllers/request-controller");
 const routerReport = require("./controllers/report-controller");
 const routerScoring = require("./controllers/scoring-controller");
+const routerAutomation = require("./controllers/automation-controller");
 const verifyToken = require("./middleware/verifyToken");
 const app = express();
 const cors = require("cors");
@@ -47,6 +48,10 @@ const profileDir = path.join(__dirname, "public", "images", "profile");
 if (!fs.existsSync(profileDir)) {
   fs.mkdirSync(profileDir, { recursive: true });
 }
+const automationDir = path.join(__dirname, "public", "images", "automation");
+if (!fs.existsSync(automationDir)) {
+  fs.mkdirSync(automationDir, { recursive: true });
+}
 
 // const csvDir = path.join(__dirname, "public", "csv");
 // if (!fs.existsSync(csvDir)) {
@@ -64,6 +69,7 @@ app.use("/persons", verifyToken, routerPerson);
 app.use("/requests", verifyToken, routerRequest);
 app.use("/reports", verifyToken, routerReport);
 app.use("/scoring", verifyToken, routerScoring);
+app.use("/automation", verifyToken, routerAutomation);
 
 app.get("/pdf/reports/:fileName", (req, res) => {
   const { fileName } = req.params;
