@@ -35,14 +35,6 @@ model Person {
   kewarganegaraan String?
   url_image_ktp String?
   url_image_selfie String?
-  url_image_surat_npwpPribadi String?
-  url_image_surat_nib String?
-  url_image_surat_npwpPerusahaan String?
-  url_image_surat_nan String?
-  url_image_surat_kdu String?
-  url_image_surat_iup String?
-  url_image_surat_tdp String?
-  url_image_surat_id String?
   path_image_ktp String?
   path_image_selfie String?
   user User? @relation(fields: [owner], references: [id])
@@ -113,4 +105,18 @@ model Authentication {
   user_agent String
   ip_address String
   token String @unique
+}
+
+model Automation {
+  id Int @id @default(autoincrement())
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  url_image_nib String?
+  url_image_siup String?
+  url_image_tdp String?
+  url_image_skdp String?
+  url_image_npwp String?
+  url_image_situ String?
+  url_image_imb String?
+  url_image_sim String?
 }

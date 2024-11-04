@@ -1,7 +1,7 @@
 // const addFileAutomation = async (
 //   req,
 //   name_surat_nomor_pokok_wajib_pajak_pribadi,
-//   name_surat_nomor_induk_berusaha,
+//   name_surat_nib,
 //   name_surat_nomor_pokok_wajib_pajak_perusahaan,
 //   name_surat_nomor_akta_notaris,
 //   name_surat_keterangan_domisili_usaha,
@@ -16,7 +16,7 @@
 //   );
 //   const nibPath = path.join(
 //     `./src/public/images/automation`,
-//     name_surat_nomor_induk_berusaha
+//     name_surat_nib
 //   );
 //   const npwpPerusahaanPath = path.join(
 //     `./src/public/images/automation`,
@@ -48,7 +48,7 @@
 //   )}/images/ktp/${name_surat_nomor_pokok_wajib_pajak_pribadi}`;
 //   const nibUrl = `${req.protocol}://${req.get(
 //     "host"
-//   )}/images/ktp/${name_surat_nomor_induk_berusaha}`;
+//   )}/images/ktp/${name_surat_nib}`;
 //   const npwpPerusahaanUrl = `${req.protocol}://${req.get(
 //     "host"
 //   )}/images/ktp/${name_surat_nomor_pokok_wajib_pajak_perusahaan}`;
@@ -263,49 +263,77 @@ const moment = require("moment-timezone");
 
 const addFileAutomation = async (
   req,
-  name_surat_nomor_induk_berusaha,
+  name_surat_nib,
+  name_surat_npwp,
   userId
 ) => {
-  const nibPath = path.join(
-    `./src/public/images/automation`,
-    name_surat_nomor_induk_berusaha
-  );
+  // Path
+  const npwpPath = path.join(`./src/public/images/automation`, name_surat_npwp);
+  const nibPath = path.join(`./src/public/images/automation`, name_surat_nib);
 
+  // URL
+  const npwpUrl = `${req.protocol}://${req.get(
+    "host"
+  )}/images/automation/${name_surat_npwp}`;
   const nibUrl = `${req.protocol}://${req.get(
     "host"
-  )}/images/automation/${name_surat_nomor_induk_berusaha}`;
+  )}/images/automation/${name_surat_nib}`;
 
+  // FormData
+  const formDataNPWP = new FormData();
+  formDataNPWP.append("image", fs.createReadStream(npwpPath));
   const formDataNIB = new FormData();
   formDataNIB.append("image", fs.createReadStream(nibPath));
 
-  // Buat konfigurasi axios untuk setiap file (header harus berbeda untuk setiap FormData)
-
+  // Konfigurasi axios
+  const axiosConfigNPWP = {
+    headers: {
+      ...formDataNPWP.getHeaders(),
+    },
+  };
   const axiosConfigNIB = {
     headers: {
-      ...formDataNIB.getHeaders(), // Headers dari FormData NIB
+      ...formDataNIB.getHeaders(),
     },
   };
 
   // Kirimkan setiap file dengan axios
+  const uploadNPWP = await axios.post(
+    `${process.env.ML_API}/api/image/upload/`,
+    formDataNPWP,
+    axiosConfigNPWP
+  );
   const uploadNIB = await axios.post(
     `${process.env.ML_API}/api/image/upload/`,
     formDataNIB,
     axiosConfigNIB
   );
 
+  // Dapatkan ID dari file surat-surat yg telah di upload
+  const npwpId = uploadNPWP.data.data.image.id;
   const nibId = uploadNIB.data.data.image.id;
 
-  // console.log(nibId, "nibId");
+  console.log(npwpId, "npwpId");
+  console.log(nibId, "nibId");
 
-  const uploadNIBToNIBAPI = await axios.post(
+  // Upload ke API AI masing-masing surat
+  const uploadNPWPToApi = await axios.post(
+    `${process.env.ML_API}/api/ocrnpwp/?id=${npwpId}`
+  );
+  const uploadNIBToApi = await axios.post(
     `${process.env.ML_API}/api/ocrnib/?id=${nibId}`
-    // formDataNIB,
-    // axiosConfigNIB
   );
 
-  // console.log(uploadNIBToNIBAPI.data, "OCR NIB response");
+  // Respon dari API AI
+  console.log(uploadNPWPToApi.data, "OCR NPWP response");
+  console.log(uploadNIBToApi.data, "OCR NIB response");
 
-  // Delete file menggunakan ID
+  // Setelah upload, Delete file menggunakan ID
+  await axios.delete(`${process.env.ML_API}/api/image/delete/`, {
+    data: {
+      id: npwpId,
+    },
+  });
   await axios.delete(`${process.env.ML_API}/api/image/delete/`, {
     data: {
       id: nibId,
@@ -316,7 +344,8 @@ const addFileAutomation = async (
   const createdAt = moment().tz(timezone).format("DD/MM/YY HH:mm:ss");
   const updatedAt = createdAt;
 
-  const automation = createAutomation(nibUrl, createdAt, updatedAt);
+  const automation = createAutomation(createdAt, updatedAt, npwpUrl, nibUrl);
+
   return automation;
 };
 
