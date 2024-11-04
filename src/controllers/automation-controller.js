@@ -20,109 +20,65 @@ router.post("/", async (req, res) => {
         message: "Tidak ada file yang diupload",
       });
     }
-    // console.log(req.files.surat_nib);
-    // return;
-    const surat_nib = req.files.surat_nib;
-    const surat_npwp = req.files.surat_npwp;
-    // const surat_nan = req.files.surat_nan;
-    // const surat_kdu = req.files.surat_kdu;
-    // const surat_iup = req.files.surat_iup;
-    // const surat_tdp = req.files.surat_tdp;
-    // const surat_id = req.files.surat_id;
 
-    // if (
-    //   !surat_npwpPribadi ||
-    //   !surat_nib ||
-    //   !surat_npwpPerusahaan ||
-    //   !surat_nan ||
-    //   !surat_kdu ||
-    //   !surat_iup ||
-    //   !surat_tdp ||
-    //   !surat_id
-    // ) {
-    //   return res.status(400).send({
-    //     error: true,
-    //     message: "Ada file yang belum diupload",
-    //   });
-    // }
+    // Ambil file dari request body
+    const nibFile = req.files.nib;
+    const siupFile = req.files.siup;
+    const tdpFile = req.files.tdp;
+    const skdpFile = req.files.skdp;
+    const npwpFile = req.files.npwp;
+    const situFile = req.files.situ;
+    const imbFile = req.files.imb;
+    const simFile = req.files.sim;
 
-    if (!surat_nib || !surat_npwp) {
+    // Cek apakah ada file yang belum diupload
+    if (
+      !nibFile ||
+      !siupFile ||
+      !tdpFile ||
+      !skdpFile ||
+      !npwpFile ||
+      !situFile ||
+      !imbFile ||
+      !simFile
+    ) {
       return res.status(400).send({
         error: true,
-        message: "Surat nib belum di upload",
+        message: "Ada file yang belum diupload",
       });
     }
 
-    const name_surat_nib = preprocessImage(surat_nib);
-    const name_surat_npwp = preprocessImage(surat_npwp);
-    // const name_surat_npwpPerusahaan = preprocessImage(surat_npwpPerusahaan);
-    // const name_surat_nan = preprocessImage(surat_nan);
-    // const name_surat_kdu = preprocessImage(surat_kdu);
-    // const name_surat_iup = preprocessImage(surat_iup);
-    // const name_surat_tdp = preprocessImage(surat_tdp);
-    // const name_surat_id = preprocessImage(surat_id);
+    // Dapatkan nama file yang diupload
+    const name_nib = preprocessImage(nibFile);
+    const name_siup = preprocessImage(siupFile);
+    const name_tdp = preprocessImage(tdpFile);
+    const name_skdp = preprocessImage(skdpFile);
+    const name_npwp = preprocessImage(npwpFile);
+    const name_situ = preprocessImage(situFile);
+    const name_imb = preprocessImage(imbFile);
+    const name_sim = preprocessImage(simFile);
 
-    await uploadImage(
-      surat_nib,
-      name_surat_nib,
-      "./src/public/images/automation"
-    );
+    // Upload file ke direktori yang diinginkan
+    await uploadImage(nibFile, name_nib, "./src/public/images/automation");
+    await uploadImage(siupFile, name_siup, "./src/public/images/automation");
+    await uploadImage(tdpFile, name_tdp, "./src/public/images/automation");
+    await uploadImage(skdpFile, name_skdp, "./src/public/images/automation");
+    await uploadImage(npwpFile, name_npwp, "./src/public/images/automation");
+    await uploadImage(situFile, name_situ, "./src/public/images/automation");
+    await uploadImage(imbFile, name_imb, "./src/public/images/automation");
+    await uploadImage(simFile, name_sim, "./src/public/images/automation");
 
-    await uploadImage(
-      surat_npwp,
-      name_surat_npwp,
-      "./src/public/images/automation"
-    );
-
-    // await uploadImage(
-    //   surat_npwpPerusahaan,
-    //   name_surat_npwpPerusahaan,
-    //   "./src/public/images/automation"
-    // );
-    // await uploadImage(
-    //   surat_nan,
-    //   name_surat_nan,
-    //   "./src/public/images/automation"
-    // );
-    // await uploadImage(
-    //   surat_kdu,
-    //   name_surat_kdu,
-    //   "./src/public/images/automation"
-    // );
-    // await uploadImage(
-    //   surat_iup,
-    //   name_surat_iup,
-    //   "./src/public/images/automation"
-    // );
-    // await uploadImage(
-    //   surat_tdp,
-    //   name_surat_tdp,
-    //   "./src/public/images/automation"
-    // );
-    // await uploadImage(
-    //   surat_id,
-    //   name_surat_id,
-    //   "./src/public/images/automation"
-    // );
-    // console.log("ok");
-
-    // const automation = await addFileAutomation(
-    //   req,
-    //   name_surat_npwpPribadi,
-    //   name_surat_nib,
-    //   name_surat_npwpPerusahaan,
-    //   name_surat_nan,
-    //   name_surat_kdu,
-    //   name_surat_iup,
-    //   name_surat_tdp,
-    //   name_surat_id,
-    //   userId
-    // );
-
+    // Tambahkan data automation ke database
     const automation = await addFileAutomation(
       req,
-      name_surat_nib,
-      name_surat_npwp,
+      name_nib,
+      name_siup,
+      name_tdp,
+      name_skdp,
+      name_npwp,
+      name_situ,
+      name_imb,
+      name_sim,
       userId
     );
 
