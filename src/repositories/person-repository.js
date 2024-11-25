@@ -263,6 +263,35 @@ const countPersonByOwnerHaveReportsFilteredByNama = async (owner, nama) => {
   return count;
 };
 
+const findPersonById = async (id) => {
+  return await prisma.person.findUnique({
+    where: { id },
+  });
+};
+
+const updatePersonData = async (id, data, partial = false) => {
+  if (partial) {
+    const currentData = await findPersonById(id);
+    data = { ...currentData, ...data };
+  }
+
+  return await prisma.person.update({
+    where: { id },
+    data,
+  });
+};
+
+const deletePersonById = async (id) => {
+  await prisma.report.deleteMany({
+    where: { id_person: id },
+  });
+
+  return await prisma.person.delete({
+    where: { id },
+  });
+};
+
+
 module.exports = {
   findPersonByUserIdAndNIK,
   createPerson,
@@ -278,4 +307,7 @@ module.exports = {
   findAllPersonByOwnerFilteredByNama,
   countPersonByOwnerFilteredByNIK,
   countPersonByOwnerFilteredByNama,
+  findPersonById,
+  updatePersonData,
+  deletePersonById,
 };

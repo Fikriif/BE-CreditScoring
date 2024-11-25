@@ -21,6 +21,9 @@ const {
   findAllPersonByOwnerFilteredByNama,
   countPersonByOwnerFilteredByNIK,
   countPersonByOwnerFilteredByNama,
+  findPersonById,
+  updatePersonData,
+  deletePersonById,
 } = require("../repositories/person-repository");
 const { calculateAge } = require("../utils");
 const AuthorizationError = require("../exceptions/AuthorizationError");
@@ -257,6 +260,37 @@ const verifyPersonAccess = async (userId, owner) => {
   }
 };
 
+const updatePerson = async (id, data, userId) => {
+  const person = await findPersonById(id);
+
+  if (!person || person.owner !== userId) {
+    throw new ClientError("Data tidak ditemukan atau akses ditolak", 404);
+  }
+
+  return await updatePersonData(id, data);
+};
+
+const partialUpdatePerson = async (id, data, userId) => {
+  const person = await findPersonById(id);
+
+  if (!person || person.owner !== userId) {
+    throw new ClientError("Data tidak ditemukan atau akses ditolak", 404);
+  }
+
+  return await updatePersonData(id, data, true);
+};
+
+const deletePerson = async (id, userId) => {
+  const person = await findPersonById(id);
+
+  if (!person || person.owner !== userId) {
+    throw new ClientError("Data tidak ditemukan atau akses ditolak", 404);
+  }
+
+  await deletePersonById(id);
+};
+
+
 module.exports = {
   addPerson,
   getAllPersonByOwner,
@@ -273,4 +307,7 @@ module.exports = {
   getCountPersonByOwnerFilteredByNIK,
   getCountPersonByOwnerFilteredByNama,
   verifyPersonAccess,
+  updatePerson,
+  partialUpdatePerson,
+  deletePerson,
 };

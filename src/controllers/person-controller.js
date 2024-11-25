@@ -14,6 +14,9 @@ const {
   getCountPersonByOwnerFilteredByNIK,
   getAllPersonByOwnerFilteredByNama,
   getCountPersonByOwnerFilteredByNama,
+  updatePerson,
+  partialUpdatePerson,
+  deletePerson,
 } = require("../services/person-service");
 const { uploadImage, preprocessImage } = require("../utils");
 const ClientError = require("../exceptions/ClientError");
@@ -153,6 +156,94 @@ router.get("/", async (req, res) => {
       },
     });
   } catch (error) {
+    console.error(error.message);
+    return res.status(500).send({
+      error: true,
+      message: "Internal Server Error",
+    });
+  } finally {
+    await prisma.$disconnect();
+  }
+});
+
+router.put("/:id", async (req, res) => {
+  const personId = parseInt(req.params.id);
+  const userId = req.userId;
+  const personData = req.body;
+
+  try {
+    const updatedPerson = await updatePerson(personId, personData, userId);
+
+    return res.status(200).send({
+      error: false,
+      message: "Data berhasil diperbarui",
+      result: updatedPerson,
+    });
+  } catch (error) {
+    if (error instanceof ClientError) {
+      return res.status(error.statusCode).send({
+        error: true,
+        message: error.message,
+      });
+    }
+    console.error(error.message);
+    return res.status(500).send({
+      error: true,
+      message: "Internal Server Error",
+    });
+  } finally {
+    await prisma.$disconnect();
+  }
+});
+
+router.patch("/:id", async (req, res) => {
+  const personId = parseInt(req.params.id);
+  const userId = req.userId;
+  const personData = req.body;
+
+  try {
+    const updatedPerson = await partialUpdatePerson(personId, personData, userId);
+
+    return res.status(200).send({
+      error: false,
+      message: "Data berhasil diperbarui sebagian",
+      result: updatedPerson,
+    });
+  } catch (error) {
+    if (error instanceof ClientError) {
+      return res.status(error.statusCode).send({
+        error: true,
+        message: error.message,
+      });
+    }
+    console.error(error.message);
+    return res.status(500).send({
+      error: true,
+      message: "Internal Server Error",
+    });
+  } finally {
+    await prisma.$disconnect();
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  const personId = parseInt(req.params.id);
+  const userId = req.userId;
+
+  try {
+    await deletePerson(personId, userId);
+
+    return res.status(200).send({
+      error: false,
+      message: "Data berhasil dihapus",
+    });
+  } catch (error) {
+    if (error instanceof ClientError) {
+      return res.status(error.statusCode).send({
+        error: true,
+        message: error.message,
+      });
+    }
     console.error(error.message);
     return res.status(500).send({
       error: true,
