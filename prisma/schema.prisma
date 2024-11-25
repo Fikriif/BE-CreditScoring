@@ -120,3 +120,75 @@ model Automation {
   url_image_imb String?
   url_image_sim String?
 }
+
+model ExelIdentity {
+  id                            Int      @id @default(autoincrement())
+  date                          DateTime
+  time                          String   // Menggunakan String untuk timestamp yang detail
+  nama                          String
+  alamat_ktp_plus_code          String
+  alamat_ktp_jalan              String
+  alamat_ktp_kelurahan          String
+  alamat_ktp_kecamatan          String
+  alamat_ktp_kabupaten          String
+  alamat_ktp_provinsi           String
+  alamat_ktp                    String
+  alamat_ktp_lat                Float
+  alamat_ktp_lon                Float
+  alamat_ktp_tipe_lokasi        String
+  alamat_ktp_place_id           String
+  alamat_ktp_jenis_jalan        String
+  alamat_ktp_pemilik_bangunan   String
+  alamat_ktp_lokasi_bangunan    String
+  alamat_domisili_plus_code     String
+  alamat_domisili_jalan         String
+  alamat_domisili_kelurahan     String
+  alamat_domisili_kecamatan     String
+  alamat_domisili_kabupaten     String
+  alamat_domisili_provinsi      String
+  alamat_domisili               String
+  alamat_domisili_lat           Float
+  alamat_domisili_lon           Float
+  alamat_domisili_tipe_lokasi   String
+  alamat_domisili_place_id      String
+  alamat_domisili_jenis_jalan   String
+  alamat_domisili_pemilik_bangunan String
+  alamat_domisili_lokasi_bangunan String
+  alamat_pekerjaan_plus_code    String
+  alamat_pekerjaan_jalan        String
+  alamat_pekerjaan_kelurahan    String
+  alamat_pekerjaan_kecamatan    String
+  alamat_pekerjaan_kabupaten    String
+  alamat_pekerjaan_provinsi     String
+  alamat_pekerjaan              String
+  alamat_pekerjaan_lat          Float
+  alamat_pekerjaan_lon          Float
+  alamat_pekerjaan_tipe_lokasi  String
+  alamat_pekerjaan_place_id     String
+  alamat_aset_plus_code         String
+  alamat_aset_jalan             String
+  alamat_aset_kelurahan         String
+  alamat_aset_kecamatan         String
+  alamat_aset_kabupaten         String
+  alamat_aset_provinsi          String
+  alamat_aset                   String
+  alamat_aset_lat               Float
+  alamat_aset_lon               Float
+  alamat_aset_tipe_lokasi       String
+  alamat_aset_place_id          String
+  jenis_aset                    String
+  nilai_aset                    Int
+  lokasi_saat_ini_lat           Float
+  lokasi_saat_ini_lon           Float
+  lokasi_bts_lat                Float
+  lokasi_bts_lon                Float
+  lokasi_check_in_digital_lat   Float
+  lokasi_check_in_digital_lon   Float
+  jenis_check_in_digital        String
+  lokasi_2_minggu_terakhir_lat  Float
+  lokasi_2_minggu_terakhir_lon  Float
+  lokasi_3_minggu_terakhir_lat  Float
+  lokasi_3_minggu_terakhir_lon  Float
+  lokasi_4_minggu_terakhir_lat  Float
+  lokasi_4_minggu_terakhir_lon  Float
+}
