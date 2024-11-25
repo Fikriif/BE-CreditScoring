@@ -748,3 +748,417 @@ app.get("/pdf/reports/:fileName", (req, res) => {
 app.listen(port, () => {
   console.log(`Server listening on ${port}`);
 });
+
+
+app.post("/exel-identity", async (req, res) => {
+  if (req.files === undefined) {
+    return res.status(400).send({
+      message: "No File Uploaded",
+    });
+  }
+
+  const ktp = req.files.ktp;
+  const foto = req.files.foto;
+  const excelFile = req.files.excelFile;
+
+  if (!ktp || !foto || !excelFile) {
+    return res.status(400).send({
+      message: "KTP, Photo, or CSV file has not been uploaded",
+    });
+  }
+
+  const ktpSize = ktp.data.length;
+  const fotoSize = foto.data.length;
+  const excelFileSize = excelFile.data.length;
+
+  const extKTP = path.extname(ktp.name);
+  const extFoto = path.extname(foto.name);
+  const extExcel = path.extname(excelFile.name);
+
+  const ktpName = ktp.md5 + extKTP;
+  const fotoName = foto.md5 + extFoto;
+  const excelFileName = excelFile.md5 + extExcel;
+
+  const uploadDirImages = path.join(__dirname, "public", "images");
+  const uploadDirExcel = path.join(__dirname, "public", "excel");
+
+  if (!fs.existsSync(uploadDirImages))
+    fs.mkdirSync(uploadDirImages, { recursive: true });
+  if (!fs.existsSync(uploadDirExcel))
+    fs.mkdirSync(uploadDirExcel, { recursive: true });
+
+  const urlKTP = `${req.protocol}://${req.get(
+    "host"
+  )}/public/images/${ktpName}`;
+  const urlFoto = `${req.protocol}://${req.get(
+    "host"
+  )}/public/images/${fotoName}`;
+  const urlExcel = `${req.protocol}://${req.get(
+    "host"
+  )}/public/excel/${excelFileName}`;
+
+  const allowedImageTypes = [".png", ".jpg", ".jpeg"];
+  const allowedCSVTypes = [".csv", ".xlsx"];
+
+  if (
+    !allowedImageTypes.includes(extKTP.toLowerCase()) ||
+    !allowedImageTypes.includes(extFoto.toLowerCase())
+  ) {
+    return res.status(422).send({
+      message: "Invalid Image Extension",
+    });
+  }
+
+  if (!allowedCSVTypes.includes(extExcel.toLowerCase())) {
+    return res.status(422).send({
+      message: "Invalid CSV file Extension",
+    });
+  }
+
+  if (ktpSize > 1000000 || fotoSize > 1000000) {
+    return res.status(422).send({
+      message: "Image must be less than 1 MB",
+    });
+  }
+
+  if (excelFileSize > 5000000) {
+    return res.status(422).send({
+      message: "CSV file must be less than 5 MB",
+    });
+  }
+
+  const uploadImage = (image, imageName) => {
+    return new Promise((resolve, reject) => {
+      const uploadPath = path.join(uploadDirImages, imageName);
+      image.mv(uploadPath, (err) => {
+        if (err) reject(err);
+        else resolve(uploadPath);
+      });
+    });
+  };
+
+  const uploadCSV = (excelFile, excelFileName) => {
+    return new Promise((resolve, reject) => {
+      const uploadPath = path.join(uploadDirExcel, excelFileName);
+      excelFile.mv(uploadPath, (err) => {
+        if (err) reject(err);
+        else resolve(uploadPath);
+      });
+    });
+  };
+
+  // const getToken = async () => {
+  //   try {
+  //     const response = await axios.post(`${process.env.ML_API}/auth`, {
+  //       username: process.env.ML_API_USERNAME, // Atur username di .env
+  //       password: process.env.ML_API_PASSWORD, // Atur password di .env
+  //     });
+
+  //     return response.data.token; // Pastikan sesuai dengan respons API
+  //   } catch (error) {
+  //     console.error("Error fetching token:", error);
+  //     throw new Error("Failed to fetch token from ML API");
+  //   }
+  // };
+
+  try {
+    // const token = await getToken();
+    const ktpPath = await uploadImage(ktp, ktpName);
+    const fotoPath = await uploadImage(foto, fotoName);
+    const excelFilePath = await uploadCSV(excelFile, excelFileName);
+
+    const formDataKTP = new FormData();
+    formDataKTP.append("image", fs.createReadStream(ktpPath));
+
+    const formDataFoto = new FormData();
+    formDataFoto.append("image", fs.createReadStream(fotoPath));
+
+    const axiosConfig = {
+      headers: {
+        Authorization: `Bearer ${process.env.ML_API_KEY}`,
+        ...formDataKTP.getHeaders(),
+      },
+    };
+
+    const uploadKtp = await axios.post(
+      `${process.env.ML_API}/api/image/upload/`,
+      formDataKTP,
+      axiosConfig
+    );
+    const uploadFoto = await axios.post(
+      `${process.env.ML_API}/api/image/upload/`,
+      formDataFoto,
+      axiosConfig
+    );
+
+    const ktpId = uploadKtp.data.data.image.id;
+    const selfieId = uploadFoto.data.data.image.id;
+
+    console.log("KTP ID:", ktpId);
+    console.log("Selfie ID:", selfieId);
+
+    const workbook = xlsx.read(excelFile.data, { type: "buffer" });
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    const jsonData = xlsx.utils.sheet_to_json(worksheet, { defval: "" });
+
+    const saveEntries = async () => {
+      try {
+        const dataEntries = jsonData.map((entry) => {
+          return prisma.exelIdentity.create({
+            data: {
+              date: new Date(entry.date),
+              time: entry.time,
+              nama: entry.nama,
+              alamat_ktp_plus_code: entry.alamat_ktp_plus_code,
+              alamat_ktp_jalan: entry.alamat_ktp_jalan,
+              alamat_ktp_kelurahan: entry.alamat_ktp_kelurahan,
+              alamat_ktp_kecamatan: entry.alamat_ktp_kecamatan,
+              alamat_ktp_kabupaten: entry.alamat_ktp_kabupaten,
+              alamat_ktp_provinsi: entry.alamat_ktp_provinsi,
+              alamat_ktp: entry.alamat_ktp,
+              alamat_ktp_lat: entry.alamat_ktp_lat,
+              alamat_ktp_lon: entry.alamat_ktp_lon,
+              alamat_ktp_tipe_lokasi: entry.alamat_ktp_tipe_lokasi,
+              alamat_ktp_place_id: entry.alamat_ktp_place_id,
+              alamat_ktp_jenis_jalan: entry.alamat_ktp_jenis_jalan,
+              alamat_ktp_pemilik_bangunan: entry.alamat_ktp_pemilik_bangunan,
+              alamat_ktp_lokasi_bangunan: entry.alamat_ktp_lokasi_bangunan,
+              alamat_domisili_plus_code: entry.alamat_domisili_plus_code,
+              alamat_domisili_jalan: entry.alamat_domisili_jalan,
+              alamat_domisili_kelurahan: entry.alamat_domisili_kelurahan,
+              alamat_domisili_kecamatan: entry.alamat_domisili_kecamatan,
+              alamat_domisili_kabupaten: entry.alamat_domisili_kabupaten,
+              alamat_domisili_provinsi: entry.alamat_domisili_provinsi,
+              alamat_domisili: entry.alamat_domisili,
+              alamat_domisili_lat: entry.alamat_domisili_lat,
+              alamat_domisili_lon: entry.alamat_domisili_lon,
+              alamat_domisili_tipe_lokasi: entry.alamat_domisili_tipe_lokasi,
+              alamat_domisili_place_id: entry.alamat_domisili_place_id,
+              alamat_domisili_jenis_jalan: entry.alamat_domisili_jenis_jalan,
+              alamat_domisili_pemilik_bangunan:
+                entry.alamat_domisili_pemilik_bangunan,
+              alamat_domisili_lokasi_bangunan:
+                entry.alamat_domisili_lokasi_bangunan,
+              alamat_pekerjaan_plus_code: entry.alamat_pekerjaan_plus_code,
+              alamat_pekerjaan_jalan: entry.alamat_pekerjaan_jalan,
+              alamat_pekerjaan_kelurahan: entry.alamat_pekerjaan_kelurahan,
+              alamat_pekerjaan_kecamatan: entry.alamat_pekerjaan_kecamatan,
+              alamat_pekerjaan_kabupaten: entry.alamat_pekerjaan_kabupaten,
+              alamat_pekerjaan_provinsi: entry.alamat_pekerjaan_provinsi,
+              alamat_pekerjaan: entry.alamat_pekerjaan,
+              alamat_pekerjaan_lat: entry.alamat_pekerjaan_lat,
+              alamat_pekerjaan_lon: entry.alamat_pekerjaan_lon,
+              alamat_pekerjaan_tipe_lokasi: entry.alamat_pekerjaan_tipe_lokasi,
+              alamat_pekerjaan_place_id: entry.alamat_pekerjaan_place_id,
+              alamat_aset_plus_code: entry.alamat_aset_plus_code,
+              alamat_aset_jalan: entry.alamat_aset_jalan,
+              alamat_aset_kelurahan: entry.alamat_aset_kelurahan,
+              alamat_aset_kecamatan: entry.alamat_aset_kecamatan,
+              alamat_aset_kabupaten: entry.alamat_aset_kabupaten,
+              alamat_aset_provinsi: entry.alamat_aset_provinsi,
+              alamat_aset: entry.alamat_aset,
+              alamat_aset_lat: entry.alamat_aset_lat,
+              alamat_aset_lon: entry.alamat_aset_lon,
+              alamat_aset_tipe_lokasi: entry.alamat_aset_tipe_lokasi,
+              alamat_aset_place_id: entry.alamat_aset_place_id,
+              jenis_aset: entry.jenis_aset,
+              nilai_aset: entry.nilai_aset,
+              lokasi_saat_ini_lat: entry.lokasi_saat_ini_lat,
+              lokasi_saat_ini_lon: entry.lokasi_saat_ini_lon,
+              lokasi_bts_lat: entry.lokasi_bts_lat,
+              lokasi_bts_lon: entry.lokasi_bts_lon,
+              lokasi_check_in_digital_lat: entry.lokasi_check_in_digital_lat,
+              lokasi_check_in_digital_lon: entry.lokasi_check_in_digital_lon,
+              jenis_check_in_digital: entry.jenis_check_in_digital,
+              lokasi_2_minggu_terakhir_lat: entry.lokasi_2_minggu_terakhir_lat,
+              lokasi_2_minggu_terakhir_lon: entry.lokasi_2_minggu_terakhir_lon,
+              lokasi_3_minggu_terakhir_lat: entry.lokasi_3_minggu_terakhir_lat,
+              lokasi_3_minggu_terakhir_lon: entry.lokasi_3_minggu_terakhir_lon,
+              lokasi_4_minggu_terakhir_lat: entry.lokasi_4_minggu_terakhir_lat,
+              lokasi_4_minggu_terakhir_lon: entry.lokasi_4_minggu_terakhir_lon,
+            },
+          });
+        });
+
+        // Tunggu hingga semua promise selesai
+        await Promise.all(dataEntries);
+
+        console.log("Semua data berhasil disimpan!");
+      } catch (err) {
+        console.error("Error saving entries to database:", err);
+      }
+    };
+
+    // Panggil fungsi saveEntries untuk menjalankan proses
+    saveEntries();
+
+    // Mengirim data JSON bersama dengan ktpId dan selfieId ke API ML
+    const mlResponse = await axios.post(
+      `${process.env.ML_API}/identityscore`,
+      {
+        ktpid: ktpId,
+        selfieid: selfieId,
+        // data: {
+        //   date: "2023-06-21",
+        //   time: "10:16:18.396268",
+        //   nama: "Elvina Sudiati",
+        //   alamat_ktp_plus_code: "16",
+        //   alamat_ktp_jalan: "Jalan Veteran II",
+        //   alamat_ktp_kelurahan: "Selabatu",
+        //   alamat_ktp_kecamatan: "Kabupaten Sukabumi",
+        //   alamat_ktp_kabupaten: "Kota Sukabumi",
+        //   alamat_ktp_provinsi: "Jawa Barat",
+        //   alamat_ktp:
+        //     "Jl. Veteran II No.16, RW.06, Selabatu, Kab. Sukabumi, Kota Sukabumi, Jawa Barat 43111, Indonesia",
+        //   alamat_ktp_lat: -6.9182816,
+        //   alamat_ktp_lon: 106.9265299,
+        //   alamat_ktp_tipe_lokasi: "ROOFTOP",
+        //   alamat_ktp_place_id: "ChIJPekRmzFIaC4R9oKxo7eRlyM",
+        //   alamat_ktp_jenis_jalan: "Jalan Besar",
+        //   alamat_ktp_pemilik_bangunan: "Perorangan Pribadi",
+        //   alamat_ktp_lokasi_bangunan: "Kawasan Pegunungan",
+        //   alamat_domisili_plus_code: "GV93+9QC",
+        //   alamat_domisili_jalan: "Jalan Guru Suma",
+        //   alamat_domisili_kelurahan: "Cibinong",
+        //   alamat_domisili_kecamatan: "Kecamatan Cibinong",
+        //   alamat_domisili_kabupaten: "Kabupaten Bogor",
+        //   alamat_domisili_provinsi: "Jawa Barat",
+        //   alamat_domisili:
+        //     "GV93+9QC, Jl. Guru Suma, Cibinong, Kec. Cibinong, Kabupaten Bogor, Jawa Barat 16911, Indonesia",
+        //   alamat_domisili_lat: -6.4815687,
+        //   alamat_domisili_lon: 106.8544011,
+        //   alamat_domisili_tipe_lokasi: "GEOMETRIC_CENTER",
+        //   alamat_domisili_place_id: "ChIJ8WmgsYbBaS4R11326Gwh7XY",
+        //   alamat_domisili_jenis_jalan: "Jalan Kecil",
+        //   alamat_domisili_pemilik_bangunan: "Pemerintah",
+        //   alamat_domisili_lokasi_bangunan: "Kawasan Perumahan",
+        //   alamat_pekerjaan_plus_code: "GV93+9QC",
+        //   alamat_pekerjaan_jalan: "Jalan Guru Suma",
+        //   alamat_pekerjaan_kelurahan: "Cibinong",
+        //   alamat_pekerjaan_kecamatan: "Kecamatan Cibinong",
+        //   alamat_pekerjaan_kabupaten: "Kabupaten Bogor",
+        //   alamat_pekerjaan_provinsi: "Jawa Barat",
+        //   alamat_pekerjaan:
+        //     "GV93+9QC, Jl. Guru Suma, Cibinong, Kec. Cibinong, Kabupaten Bogor, Jawa Barat 16911, Indonesia",
+        //   alamat_pekerjaan_lat: -6.4815687,
+        //   alamat_pekerjaan_lon: 106.8544011,
+        //   alamat_pekerjaan_tipe_lokasi: "GEOMETRIC_CENTER",
+        //   alamat_pekerjaan_place_id: "ChIJ8WmgsYbBaS4R11326Gwh7XY",
+        //   alamat_aset_plus_code: "7M8X+52M",
+        //   alamat_aset_jalan: "Besuki",
+        //   alamat_aset_kelurahan: "Besuki",
+        //   alamat_aset_kecamatan: "Kecamatan Besuki",
+        //   alamat_aset_kabupaten: "Kabupaten Situbondo",
+        //   alamat_aset_provinsi: "Jawa Timur",
+        //   alamat_aset:
+        //     "7M8X+52M, Besuki, Kec. Besuki, Kabupaten Situbondo, Jawa Timur 68356, Indonesia",
+        //   alamat_aset_lat: -7.7345357,
+        //   alamat_aset_lon: 113.6975385,
+        //   alamat_aset_tipe_lokasi: "ROOFTOP",
+        //   alamat_aset_place_id: "ChIJ5_6gKPQe1y0RvGO6cj91fTg",
+        //   jenis_aset: "Kendaraan",
+        //   nilai_aset: 145006357,
+        //   lokasi_saat_ini_lat: -6.9182816,
+        //   lokasi_saat_ini_lon: 106.9265299,
+        //   lokasi_bts_lat: -7.01833,
+        //   lokasi_bts_lon: 107.60389,
+        //   lokasi_check_in_digital_lat: -7.5790982,
+        //   lokasi_check_in_digital_lon: 112.2312996,
+        //   jenis_check_in_digital: "Kantor",
+        //   lokasi_2_minggu_terakhir_lat: 3.7275508,
+        //   lokasi_2_minggu_terakhir_lon: 98.6738755,
+        //   lokasi_3_minggu_terakhir_lat: 3.7275508,
+        //   lokasi_3_minggu_terakhir_lon: 98.6738755,
+        //   lokasi_4_minggu_terakhir_lat: -6.4815687,
+        //   lokasi_4_minggu_terakhir_lon: 106.8544011,
+        // },
+        data: jsonData[0],
+        // data: {
+        //   date,
+        //   time,
+        //   nama,
+        //   alamat_ktp_plus_code,
+        //   alamat_ktp_jalan,
+        //   alamat_ktp_kelurahan,
+        //   alamat_ktp_kecamatan,
+        //   alamat_ktp_kabupaten,
+        //   alamat_ktp_provinsi,
+        //   alamat_ktp,
+        //   alamat_ktp_lat,
+        //   alamat_ktp_lon,
+        //   alamat_ktp_tipe_lokasi,
+        //   alamat_ktp_place_id,
+        //   alamat_ktp_jenis_jalan,
+        //   alamat_ktp_pemilik_bangunan,
+        //   alamat_ktp_lokasi_bangunan,
+        //   alamat_domisili_plus_code,
+        //   alamat_domisili_jalan,
+        //   alamat_domisili_kelurahan,
+        //   alamat_domisili_kecamatan,
+        //   alamat_domisili_kabupaten,
+        //   alamat_domisili_provinsi,
+        //   alamat_domisili,
+        //   alamat_domisili_lat,
+        //   alamat_domisili_lon,
+        //   alamat_domisili_tipe_lokasi,
+        //   alamat_domisili_place_id,
+        //   alamat_domisili_jenis_jalan,
+        //   alamat_domisili_pemilik_bangunan,
+        //   alamat_domisili_lokasi_bangunan,
+        //   alamat_pekerjaan_plus_code,
+        //   alamat_pekerjaan_jalan,
+        //   alamat_pekerjaan_kelurahan,
+        //   alamat_pekerjaan_kecamatan,
+        //   alamat_pekerjaan_kabupaten,
+        //   alamat_pekerjaan_provinsi,
+        //   alamat_pekerjaan,
+        //   alamat_pekerjaan_lat,
+        //   alamat_pekerjaan_lon,
+        //   alamat_pekerjaan_tipe_lokasi,
+        //   alamat_pekerjaan_place_id,
+        //   alamat_aset_plus_code,
+        //   alamat_aset_jalan,
+        //   alamat_aset_kelurahan,
+        //   alamat_aset_kecamatan,
+        //   alamat_aset_kabupaten,
+        //   alamat_aset_provinsi,
+        //   alamat_aset,
+        //   alamat_aset_lat,
+        //   alamat_aset_lon,
+        //   alamat_aset_tipe_lokasi,
+        //   alamat_aset_place_id,
+        //   jenis_aset,
+        //   nilai_aset,
+        //   lokasi_saat_ini_lat,
+        //   lokasi_saat_ini_lon,
+        //   lokasi_bts_lat,
+        //   lokasi_bts_lon,
+        //   lokasi_check_in_digital_lat,
+        //   lokasi_check_in_digital_lon,
+        //   jenis_check_in_digital,
+        //   lokasi_2_minggu_terakhir_lat,
+        //   lokasi_2_minggu_terakhir_lon,
+        //   lokasi_3_minggu_terakhir_lat,
+        //   lokasi_3_minggu_terakhir_lon,
+        //   lokasi_4_minggu_terakhir_lat,
+        //   lokasi_4_minggu_terakhir_lon,
+        // },
+      },
+      console.log(jsonData),
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.ML_API_KEY}`,
+        },
+      }
+    );
+
+    res.status(200).json({
+      mlResponse: mlResponse.data,
+    });
+    console.log("Data payload:", JSON.stringify(data));
+  } catch (error) {
+    console.error("Error during processing:", error);
+    res.status(500).send({ message: "Internal Server Error", error });
+  }
+});
